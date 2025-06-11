@@ -15,15 +15,15 @@ class FollowsController extends Controller
     public function __invoke(Request $request, string $userName)
     {
         $quser=Quser::where('user_name',$userName)->firstOrFail();
-        $follows=Follows::where('following_user_id',$quser->id)->get();
-        $followusers=array();
-        foreach($follows as $follow){
-            $fuser=Quser::where('id',$follow->followed_user_id)->first();
-            array_push($followusers,$fuser);
+        $relations=Follows::where('following_user_id',$quser->id)->get();
+        $users=array();
+        foreach($relations as $relation){
+            $user=Quser::where('id',$relation->followed_user_id)->first();
+            array_push($users,$user);
         }
         return view('user.follows')->with([
             'displayName'=>$quser->display_name,
-            'followusers'=>$followusers,
+            'users'=>$users,
         ]);
     }
 }

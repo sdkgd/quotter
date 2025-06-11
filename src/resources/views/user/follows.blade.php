@@ -10,7 +10,7 @@
 <body>
     <h1>Quotter</h1>
     <h2>{{$displayName}} さんがフォロー中</h2>  
-    @foreach($followusers as $user)
+    @foreach($users as $user)
         <p><a href="/user/{{$user->user_name}}">{{$user->display_name}}</a></p>
     @endforeach
 </body>
