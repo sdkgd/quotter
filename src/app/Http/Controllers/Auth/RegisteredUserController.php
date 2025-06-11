@@ -49,6 +49,6 @@ class RegisteredUserController extends Controller
 
         Auth::login($quser);
 
-        return redirect(route('dashboard', absolute: false));
+        return redirect(route('quoot.index', absolute: false));
     }
 }

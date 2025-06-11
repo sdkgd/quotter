@@ -26,11 +26,16 @@ class UserController extends Controller
         ])->first();
         $isFollowing=false;
         if($follows) $isFollowing=true;
+        $imagePath=null;
+        if($quser->profile_image_id){
+            $imagePath=$quser->getImagePath();
+        }
         return view('user.index')->with([
             'id'=>$quser->id,
             'userName'=>$quser->user_name,
             'displayName'=>$quser->display_name,
             'profile'=>$quser->profile,
+            'imagePath'=>$imagePath,
             'quoots'=>$quoots,
             'isFollowing'=>$isFollowing,
         ]);

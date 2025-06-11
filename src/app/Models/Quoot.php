@@ -24,4 +24,9 @@ class Quoot extends Model
     {
        return $this->quser->user_name;
     }
+
+    public function getImagePath()
+    {
+       return $this->quser->getImagePath();
+    }
 }

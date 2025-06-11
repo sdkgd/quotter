@@ -20,4 +20,15 @@ class Quser extends Authenticatable
     {
         return $this->hasMany(Quoot::class);
     }
+
+    public function image()
+    {
+        return $this->hasOne(Image::class,'id','profile_image_id');
+    }
+
+    public function getImagePath()
+    {
+        if($this->profile_image_id) return $this->image->path;
+        else return null;
+    }
 }

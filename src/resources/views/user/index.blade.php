@@ -4,9 +4,16 @@
     <x-main>
         <div class="h-8"></div>
         <div class="flex justify-between">
-            <div class="ml-8">
-                <h2 class="text-3xl font-bold mb-4">{{$displayName}}</h2>
-                <p>{{$profile}}</p>
+            <div class="flex">
+                @if($imagePath)
+                    <img src="{{ asset('storage/app/public/'.$imagePath) }}" alt="profile image" width="120" height="120" class="object-contain">
+                @else
+                   <img src="{{ asset('storage/app/public/default_profile_icon.png') }}" alt="profile image" width="120" height="120" class="object-contain">
+                @endif
+                <div class="ml-8">
+                    <h2 class="text-3xl font-bold mb-4">{{$displayName}}</h2>
+                    <p>{!!nl2br(e($profile))!!}</p>
+                </div>
             </div>
 
             <div>

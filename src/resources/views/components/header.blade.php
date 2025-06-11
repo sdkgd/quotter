@@ -15,9 +15,22 @@
                     <ul class="flex space-x-4">
                         <li><a href="{{route('quoot.create')}}" class="text-center text-gray-500 hover:text-black">Create</a></li>
                         <li><a href="{{route('user.index',['userName'=>$userName])}}" class="text-center text-gray-500 hover:text-black">My page</a></li>
+                        <form action="{{route('logout')}}"  method="post">
+                            @csrf
+                            <button type="submit" name="logout" id="logout" class="text-center text-gray-500 hover:text-black">Logout</button>
+                        </form>
                     </ul>
                 </nav>
             @endauth
+
+            @guest
+                <nav>
+                    <ul class="flex space-x-4">
+                        <li><a href="{{route('login')}}" class="text-center text-gray-500 hover:text-black">Login</a></li>
+                        <li><a href="{{route('register')}}" class="text-center text-gray-500 hover:text-black">Register</a></li>
+                    </ul>
+                </nav>
+            @endguest
 
         </div>
         
