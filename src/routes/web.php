@@ -24,7 +24,7 @@ Route::prefix('/quoot')->group(function(){
 });
 
 Route::prefix('/quoot')->middleware('auth')->group(function(){
-   Route::get('/create', \App\Http\Controllers\Quoot\Create\CreateController::class);
+   Route::get('/create', \App\Http\Controllers\Quoot\Create\CreateController::class)->name('quoot.create');
    Route::post('/create', \App\Http\Controllers\Quoot\Create\PostController::class);
    Route::get('/update/{quootId}', \App\Http\Controllers\Quoot\Update\UpdateController::class)->name('quoot.update');
    Route::put('/update/{quootId}', \App\Http\Controllers\Quoot\Update\PutController::class)->name('quoot.update.put');
@@ -44,8 +44,8 @@ Route::prefix('/user/{userName}')->middleware('auth')->group(function(){
    Route::post('/chat', \App\Http\Controllers\Chat\MakeChatRoomController::class);
    Route::post('/follow', \App\Http\Controllers\User\FollowAction\FollowUserController::class);
    Route::delete('/unfollow', \App\Http\Controllers\User\FollowAction\UnFollowUserController::class);
-   Route::get('/follows', \App\Http\Controllers\User\FollowsController::class);
-   Route::get('/followers', \App\Http\Controllers\User\FollowersController::class);
+   Route::get('/follows', \App\Http\Controllers\User\FollowsController::class)->name('user.follows');
+   Route::get('/followers', \App\Http\Controllers\User\FollowersController::class)->name('user.followers');
    Route::get('/edit', \App\Http\Controllers\User\Edit\EditController::class)->name('user.edit');
    Route::put('/edit', \App\Http\Controllers\User\Edit\EditPutController::class)->name('user.edit.put');
 });
