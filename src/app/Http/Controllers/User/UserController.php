@@ -4,28 +4,32 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Quser;
-use App\Models\Quoot;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Follows;
+use App\Services\QuserService;
+use App\Services\QuootService;
+use App\Services\FollowsService;
 
 class UserController extends Controller
 {
     /**
      * Handle the incoming request.
      */
-    public function __invoke(Request $request, string $userName)
+    public function __invoke(
+        Request $request, 
+        string $userName,
+        QuserService $quserService,
+        QuootService $quootService,
+        FollowsService $followsService,
+    )
     {
-        $quser=Quser::where('user_name',$userName)->firstOrFail();
-        $quoots=Quoot::where('user_id',$quser->id)->orderBy('created_at','DESC')->get();
-        $following=Auth::id();
-        $follower=$quser->id;
-        $follows=Follows::where([
-            ['following_user_id',$following],
-            ['followed_user_id',$follower],
-        ])->first();
+        $quser=$quserService->getUserByUserName($userName);
+        $quoots=$quootService->getUserQuoots($quser->id);
         $isFollowing=false;
-        if($follows) $isFollowing=true;
+        $following=Auth::id();
+        if($following){
+            $follower=$quser->id;
+            $isFollowing=$followsService->isFollow($following,$follower);
+        }
         $imagePath=null;
         if($quser->profile_image_id){
             $imagePath=$quser->getImagePath();

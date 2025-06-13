@@ -4,35 +4,31 @@ namespace App\Http\Controllers\Quoot;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Quoot;
-use App\Models\Quser;
 use \Illuminate\Support\Facades\Auth;
-use App\Models\Follows;
+use App\Services\QuootService;
+use App\Services\QuserService;
 
 class IndexController extends Controller
 {
     /**
      * Handle the incoming request.
      */
-    public function __invoke(Request $request)
+    public function __invoke(
+        Request $request,
+        QuootService $quootService,
+        QuserService $quserService,
+    )
     {
         $loginId=Auth::id();
         if($loginId){
-            $users=Follows::where('following_user_id',$loginId)->get();
-            $followUserIds=array(
-                0=>(int)$loginId,
-            );
-            foreach($users as $user){
-                $followUserIds[]=$user->followed_user_id;
-            }
-            $quoots=Quoot::whereIn('user_id',$followUserIds)->orderBy('created_at','DESC')->get();
-            $loginUser=Quser::where('id',$loginId)->first();
+            $quoots=$quootService->getFollowsQuoots($loginId);
+            $loginUserName=$quserService->getUserById($loginId)->user_name;
             return view('quoot.index')->with([
-                'userName'=>$loginUser->user_name,
+                'userName'=>$loginUserName,
                 'quoots'=>$quoots,
             ]);
         }else{
-            $quoots=Quoot::orderBy('created_at','DESC')->get();
+            $quoots=$quootService->getAllQuoots();
             return view('quoot.index')->with([
                 'quoots'=>$quoots,
             ]);

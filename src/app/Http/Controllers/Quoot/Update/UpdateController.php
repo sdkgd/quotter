@@ -4,23 +4,22 @@ namespace App\Http\Controllers\Quoot\Update;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Quoot;
 use Illuminate\Support\Facades\Auth;
+use App\Services\QuootService;
 
 class UpdateController extends Controller
 {
     /**
      * Handle the incoming request.
      */
-    public function __invoke(Request $request)
+    public function __invoke(
+        Request $request,
+        QuootService $quootService,
+    )
     {
-        $userId=Auth::id();
         $quootId=(int)$request->route('quootId');
-        $quoot=Quoot::where('id',$quootId)->firstOrFail();
-        if($userId===$quoot->user_id){
-            return view('quoot.update')->with('quoot',$quoot);
-        }else{
-            abort(403);
-        }
+        $quoot=$quootService->getQuootById($quootId);
+        if(Auth::user()->cannot('update',$quoot)) abort(403);
+        return view('quoot.update')->with('quoot',$quoot);
     }
 }

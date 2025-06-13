@@ -7,8 +7,8 @@
         @foreach($users as $user)
             <li class="border-b last:border-0 border-gray-200 p-4">
                 <div class="flex">
-                    @if($user->getImagePath())
-                        <img src="{{ asset('storage/app/public/'.$user->getImagePath()) }}" alt="profile image" width="60" height="60" class="object-contain">
+                    @if($user->image)
+                        <img src="{{ asset('storage/app/public/'.$user->image->path) }}" alt="profile image" width="60" height="60" class="object-contain">
                     @else
                         <img src="{{ asset('storage/app/public/default_profile_icon.png') }}" alt="profile image" width="60" height="60" class="object-contain">
                     @endif

@@ -4,20 +4,20 @@ namespace App\Http\Controllers\Quoot\Create;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Quoot;
 use App\Http\Requests\Quoot\CreateRequest;
+use App\Services\QuootService;
 
 class PostController extends Controller
 {
     /**
      * Handle the incoming request.
      */
-    public function __invoke(CreateRequest $request)
+    public function __invoke(
+        CreateRequest $request,
+        QuootService $quootService,
+    )
     {
-        $quoot=new Quoot;
-        $quoot->content=$request->getQuoot();
-        $quoot->user_id=$request->getUserId();
-        $quoot->save();
+        $quootService->createQuoot($request->getUserId(),$request->getQuoot());
         return redirect()->route('quoot.index');
     }
 }

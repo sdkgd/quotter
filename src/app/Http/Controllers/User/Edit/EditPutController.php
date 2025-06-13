@@ -5,48 +5,39 @@ namespace App\Http\Controllers\User\Edit;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Quser;
 use App\Http\Requests\User\EditRequest;
-use App\Models\Image;
-use Illuminate\Support\Facades\Storage;
+use App\Services\QuserService;
+use App\Services\ImageService;
 
 class EditPutController extends Controller
 {
     /**
      * Handle the incoming request.
      */
-    public function __invoke(EditRequest $request, string $userName)
+    public function __invoke(
+        EditRequest $request, 
+        string $userName,
+        QuserService $quserService,
+        ImageService $imageService,
+    )
     {
-        $quser=Quser::where('user_name',$userName)->firstOrFail();
-        if(Auth::id()===$quser->id){
-            $quser->display_name=$request->getInput1();
-            $quser->profile=$request->getInput2();
-            
-            if($request->getInput3()){
-                $str=Storage::disk('public')->putFile('',$request->getInput3());
+        $quser=$quserService->getUserByUserName($userName);
+        if(Auth::user()->cannot('update',$quser)) abort(403);
 
-                $image=new Image;
-                $image->path=$str;
-                $image->save();
-
-                if($quser->profile_image_id){
-                    $oldImage=Image::where('id',$quser->profile_image_id)->first();
-                    $quser->profile_image_id=$image->id;
-                    $quser->save();
-                    Storage::disk('public')->delete($oldImage->path);
-                    $oldImage->delete();
-                }else{
-                    $quser->profile_image_id=$image->id;
-                    $quser->save();
-                }
-                
+        $quserService->setDisplayName($quser->id,$request->getInput1());
+        $quserService->setProfile($quser->id,$request->getInput2());
+        
+        if($request->getInput3()){
+            $newImageId=$imageService->createImage($request->getInput3());
+            if($quser->profile_image_id){
+                $oldImageId=$quser->profile_image_id;
+                $quserService->setProfileImageId($quser->id,$newImageId);
+                $imageService->deleteImage($oldImageId);
             }else{
-                $quser->save();
+                $quserService->setProfileImageId($quser->id,$newImageId);
             }
-
-            return redirect()->route('user.index',['userName'=>$userName]);
-        }else{
-            abort(403);
         }
+
+        return redirect()->route('user.index',['userName'=>$userName]);
     }
 }
