@@ -6,9 +6,19 @@
         <div class="flex justify-between">
             <div class="flex">
                 @if($imagePath)
-                    <img src="{{ asset('storage/app/public/'.$imagePath) }}" alt="profile image" width="120" height="120" class="object-contain">
+                    @env('production')
+                        <img src="{{ $imagePath }}" alt="profile image" width="120" height="120" class="object-contain">
+                    @endenv
+                    @env('local')
+                        <img src="{{ asset('storage/app/public/'.$imagePath) }}" alt="profile image" width="120" height="120" class="object-contain">
+                    @endenv
                 @else
-                   <img src="{{ asset('storage/app/public/default_profile_icon.png') }}" alt="profile image" width="120" height="120" class="object-contain">
+                    @env('production')
+                        <img src="https://cognitobirm-quotter-static-file.s3.ap-northeast-1.amazonaws.com/default_profile_icon.png" alt="profile image" width="120" height="120" class="object-contain">
+                    @endenv
+                    @env('local')
+                        <img src="{{ asset('storage/app/public/default_profile_icon.png') }}" alt="profile image" width="120" height="120" class="object-contain">
+                    @endenv
                 @endif
                 <div class="ml-8">
                     <h2 class="text-3xl font-bold mb-4">{{$displayName}}</h2>

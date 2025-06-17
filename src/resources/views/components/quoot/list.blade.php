@@ -9,9 +9,19 @@
             <div class="flex">
 
                 @if($quoot->quser->image)
-                    <img src="{{ asset('storage/app/public/'.$quoot->quser->image->path) }}" alt="profile image" width="60" height="60" class="object-contain">
+                    @env('production')
+                        <img src="{{ $quoot->quser->image->path }}" alt="profile image" width="60" height="60" class="object-contain">
+                    @endenv
+                    @env('local')
+                        <img src="{{ asset('storage/app/public/'.$quoot->quser->image->path) }}" alt="profile image" width="60" height="60" class="object-contain">
+                    @endenv
                 @else
-                    <img src="{{ asset('storage/app/public/default_profile_icon.png') }}" alt="profile image" width="60" height="60" class="object-contain">
+                    @env('production')
+                        <img src="https://cognitobirm-quotter-static-file.s3.ap-northeast-1.amazonaws.com/default_profile_icon.png" alt="profile image" width="60" height="60" class="object-contain">
+                    @endenv
+                    @env('local')
+                        <img src="{{ asset('storage/app/public/default_profile_icon.png') }}" alt="profile image" width="60" height="60" class="object-contain">
+                    @endenv
                 @endif
 
                 <div class="ml-4">

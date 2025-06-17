@@ -8,9 +8,19 @@
             <li class="border-b last:border-0 border-gray-200 p-4">
                 <div class="flex">
                     @if($user->image)
-                        <img src="{{ asset('storage/app/public/'.$user->image->path) }}" alt="profile image" width="60" height="60" class="object-contain">
+                        @env('production')
+                            <img src="{{ $user->image->path }}" alt="profile image" width="60" height="60" class="object-contain">
+                        @endenv
+                        @env('local')
+                            <img src="{{ asset('storage/app/public/'.$user->image->path) }}" alt="profile image" width="60" height="60" class="object-contain">
+                        @endenv
                     @else
-                        <img src="{{ asset('storage/app/public/default_profile_icon.png') }}" alt="profile image" width="60" height="60" class="object-contain">
+                        @env('production')
+                            <img src="https://cognitobirm-quotter-static-file.s3.ap-northeast-1.amazonaws.com/default_profile_icon.png" alt="profile image" width="60" height="60" class="object-contain">
+                        @endenv
+                        @env('local')
+                            <img src="{{ asset('storage/app/public/default_profile_icon.png') }}" alt="profile image" width="60" height="60" class="object-contain">
+                        @endenv
                     @endif
 
                     <div class="ml-8">
