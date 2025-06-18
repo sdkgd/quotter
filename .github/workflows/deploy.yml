@@ -62,7 +62,7 @@ jobs:
       - name: composer install
         if: ${{ !steps.cache-composer.outputs.cache-hit }}
         working-directory: src
-        run: composer install -n --prefer-dist --no-dev
+        run: composer install -n --prefer-dist
 
       - name: Download env ci file
         run: |
