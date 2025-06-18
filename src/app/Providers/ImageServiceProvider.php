@@ -11,7 +11,7 @@ class ImageServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        if($this->app->environment('production')){
+        if($this->app->environment(['production','ci'])){
             $this->app->bind(
                 \App\Services\ImageService::class, 
                 \App\Services\S3ImageServiceImpl::class

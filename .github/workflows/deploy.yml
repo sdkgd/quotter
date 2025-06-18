@@ -1,0 +1,141 @@
+name: deploy
+
+on:
+  push:
+    branches:
+    - test
+
+env:
+  AWS_REGION: ap-northeast-1
+  APP_NAME: quotter
+
+jobs:
+  deploy:
+    name: Deploy app to AWS Fargate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure aws credentials for prod
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ secrets.PROD_AWS_ASSUME_ROLE_ARN }}
+          role-duration-seconds: 1800
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      - name: Cache npm
+        id: cache-npm-ci
+        uses: actions/cache@v4
+        with:
+          path: src/node_modules
+          key: ${{ runner.os }}-npm-${{ hashFiles('src/package-lock.json')}}      
+
+      - name: npm ci
+        if: ${{ !steps.cache-npm-ci.outputs.cache-hit }}
+        working-directory: src
+        run: npm ci
+
+      - name: Transpile
+        working-directory: src
+        run: npm run build
+
+      - name: Use PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+
+      - name: Cache composer
+        id: cache-composer
+        uses: actions/cache@v4
+        with:
+          path: src/vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('src/composer.lock')}}
+
+      - name: composer install
+        if: ${{ !steps.cache-composer.outputs.cache-hit }}
+        working-directory: src
+        run: composer install -n --prefer-dist --no-dev
+
+      - name: Download env ci file
+        run: |
+          aws s3 cp s3://cognitobirm-quotter-env-file/php/.env.ci ./src
+          mv src/.env.ci src/.env
+
+      - name: Build and Run Container
+        run: docker compose -f docker-compose.yml up -d --build --wait
+
+      - name: Create testing database
+        run: |
+          chmod 755 src/test.sql
+          docker compose exec -T db mysql -uroot -proot < src/test.sql
+
+      - name: Execute test
+        working-directory: src
+        run: |
+          chmod -R 777 storage bootstrap/cache
+          chmod 777 .env
+          docker compose exec -T php php artisan key:generate
+          docker compose exec -T php php artisan migrate --force
+          docker compose exec -T php php artisan test
+          rm .env
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+        id: amazon-ecr-login
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Create metadata of web container image
+        id: meta-web
+        env:
+          ECR_REGISTRY: ${{ steps.amazon-ecr-login.outputs.registry }}
+          ECR_REPOSITORY: ${{ env.APP_NAME }}-web
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}
+          tags: type=sha,format=long
+
+      - name: Create metadata of php container image
+        id: meta-php
+        env:
+          ECR_REGISTRY: ${{ steps.amazon-ecr-login.outputs.registry }}
+          ECR_REPOSITORY: ${{ env.APP_NAME }}-php
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}
+          tags: type=sha,format=long
+
+      - name: Build and push web container image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: infra/web/prod/Dockerfile
+          push: true
+          provenance: false
+          platforms: linux/amd64
+          tags: ${{ steps.meta-web.outputs.tags }}
+          labels: ${{ steps.meta-web.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push php container image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: infra/php/prod/Dockerfile
+          push: true
+          provenance: false
+          platforms: linux/amd64
+          tags: ${{ steps.meta-php.outputs.tags }}
+          labels: ${{ steps.meta-php.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
