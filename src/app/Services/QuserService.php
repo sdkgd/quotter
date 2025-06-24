@@ -4,6 +4,8 @@ namespace App\Services;
 use App\Models\Quser;
 use Illuminate\Database\Eloquent\Collection;
 use App\Services\FollowsService;
+use App\Http\Resources\QuserResource;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class QuserService{
     private $followsService;
@@ -12,17 +14,17 @@ class QuserService{
         $this->followsService=$followsService;
     }
 
-    public function getUserById(int $id):Quser{
+    public function getUserById(int $id):QuserResource{
         $quser=Quser::where('id',$id)->firstOrFail();
-        return $quser;
+        return new QuserResource($quser);
     }
 
-    public function getUserByUserName(string $userName):Quser{
+    public function getUserByUserName(string $userName):QuserResource{
         $quser=Quser::where('user_name',$userName)->firstOrFail();
-        return $quser;
+        return new QuserResource($quser);
     }
 
-    public function getFollowsProfiles(int $id):Collection{
+    public function getFollowsProfiles(int $id):AnonymousResourceCollection{
         $followers=$this->followsService->getFollows($id);
         $userIds=array();
         foreach($followers as $follower){
@@ -30,10 +32,10 @@ class QuserService{
         }
 
         $users=Quser::with('image')->whereIn('id',$userIds)->get();
-        return $users;
+        return QuserResource::collection($users);
     }
 
-    public function getFollowersProfiles(int $id):Collection{
+    public function getFollowersProfiles(int $id):AnonymousResourceCollection{
         $follows=$this->followsService->getFollowers($id);
         $userIds=array();
         foreach($follows as $follow){
@@ -41,7 +43,7 @@ class QuserService{
         }
 
         $users=Quser::with('image')->whereIn('id',$userIds)->get();
-        return $users;
+        return QuserResource::collection($users);
     }
 
     public function setDisplayName(int $id, string $displayName):void{

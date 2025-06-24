@@ -18,12 +18,14 @@ class EditController extends Controller
         QuserService $quserService,
     )
     {
-        $quser=$quserService->getUserByUserName($userName);
+        $quser=$quserService->getUserByUserName($userName)->resource;
         if(Auth::user()->cannot('update',$quser)) abort(403);
-        return view('user.edit')->with([
-            'userName'=>$quser->user_name,
-            'displayName'=>$quser->display_name,
-            'profile'=>$quser->profile
-        ]);
+        return response()->json([
+            'id'=>$quser->id,
+            'user_name'=>$quser->user_name,
+            'display_name'=>$quser->display_name,
+            'profile'=>$quser->profile,
+            'profile_image_id'=>$quser->profile_image_id,
+        ],200);
     }
 }

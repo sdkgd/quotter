@@ -21,7 +21,7 @@ class EditPutController extends Controller
         ImageService $imageService,
     )
     {
-        $quser=$quserService->getUserByUserName($userName);
+        $quser=$quserService->getUserByUserName($userName)->resource;
         if(Auth::user()->cannot('update',$quser)) abort(403);
 
         $quserService->setDisplayName($quser->id,$request->getInput1());
@@ -38,6 +38,6 @@ class EditPutController extends Controller
             }
         }
 
-        return redirect()->route('user.index',['userName'=>$userName]);
+        return response()->noContent();
     }
 }

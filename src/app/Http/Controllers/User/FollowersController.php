@@ -17,11 +17,11 @@ class FollowersController extends Controller
         QuserService $quserService,
     )
     {
-        $quser=$quserService->getUserByUserName($userName);
+        $quser=$quserService->getUserByUserName($userName)->resource;
         $users=$quserService->getFollowersProfiles($quser->id);
-        return view('user.followers')->with([
+        return response()->json([
             'displayName'=>$quser->display_name,
             'users'=>$users,
-        ]);
+        ],200);
     }
 }

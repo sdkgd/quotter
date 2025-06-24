@@ -22,10 +22,10 @@ class UserController extends Controller
         FollowsService $followsService,
     )
     {
-        $quser=$quserService->getUserByUserName($userName);
+        $quser=$quserService->getUserByUserName($userName)->resource;
         $quoots=$quootService->getUserQuoots($quser->id);
         $isFollowing=false;
-        $following=Auth::id();
+        $following=$request->id;
         if($following){
             $follower=$quser->id;
             $isFollowing=$followsService->isFollow($following,$follower);
@@ -34,7 +34,7 @@ class UserController extends Controller
         if($quser->profile_image_id){
             $imagePath=$quser->getImagePath();
         }
-        return view('user.index')->with([
+        return response()->json([
             'id'=>$quser->id,
             'userName'=>$quser->user_name,
             'displayName'=>$quser->display_name,
@@ -42,6 +42,6 @@ class UserController extends Controller
             'imagePath'=>$imagePath,
             'quoots'=>$quoots,
             'isFollowing'=>$isFollowing,
-        ]);
+        ],200);
     }
 }

@@ -18,9 +18,9 @@ class PutController extends Controller
         QuootService $quootService,
     )
     {
-        $quoot=$quootService->getQuootById($request->getId());
+        $quoot=$quootService->getQuootById($request->getId())->resource;
         if(Auth::user()->cannot('update',$quoot)) abort(403);
         $quootService->updateQuoot($request->getId(),$request->getQuoot());
-        return redirect()->route('quoot.index');
+        return response()->noContent();
     }
 }

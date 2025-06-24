@@ -21,8 +21,8 @@ class FollowUserController extends Controller
     )
     {
         $following=Auth::id();
-        $follower=$quserService->getUserByUserName($userName)->id;
+        $follower=$quserService->getUserByUserName($userName)->resource->id;
         $followsService->createFollow($following,$follower);
-        return redirect()->route('user.index',['userName'=>$userName]);
+        return response()->json([],201);
     }
 }

@@ -25,6 +25,6 @@ class PostController extends Controller
         $chat=$chatService->getChatById($chatId);
         if(Auth::user()->cannot('enter',$chat)) abort(403);
         $messageService->createMessage($chatId,Auth::id(),$request->getMessage());
-        return redirect()->route('chat.index',['chatId'=>$chatId]);
+        return response()->json([],201);
     }
 }

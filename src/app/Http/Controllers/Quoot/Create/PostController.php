@@ -18,6 +18,6 @@ class PostController extends Controller
     )
     {
         $quootService->createQuoot($request->getUserId(),$request->getQuoot());
-        return redirect()->route('quoot.index');
+        return response()->json([],201);
     }
 }

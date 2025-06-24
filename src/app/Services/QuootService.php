@@ -4,6 +4,8 @@ namespace App\Services;
 use App\Models\Quoot;
 use App\Services\FollowsService;
 use Illuminate\Database\Eloquent\Collection;
+use App\Http\Resources\QuootResource;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class QuootService{
     private $followsService;
@@ -19,9 +21,9 @@ class QuootService{
         $quoot->save();
     }
 
-    public function getQuootById(int $id):Quoot{
+    public function getQuootById(int $id):QuootResource{
         $quoot=Quoot::where('id',$id)->FirstOrFail();
-        return $quoot;
+        return new QuootResource($quoot);
     }
 
     public function updateQuoot(int $id, string $content):void{
@@ -35,12 +37,12 @@ class QuootService{
         $quoot->delete();
     }
 
-    public function getAllQuoots():Collection{
+    public function getAllQuoots():AnonymousResourceCollection{
         $quoots=Quoot::with('quser.image')->orderBy('created_at','DESC')->get();
-        return $quoots;
+        return QuootResource::collection($quoots);
     }
 
-    public function getFollowsQuoots(int $userId):Collection{
+    public function getFollowsQuoots(int $userId):AnonymousResourceCollection{
         $users=$this->followsService->getFollows($userId);
         $followUserIds=array(
             0=>(int)$userId,
@@ -49,11 +51,11 @@ class QuootService{
             $followUserIds[]=$user->followed_user_id;
         }
         $quoots=Quoot::with('quser.image')->whereIn('user_id',$followUserIds)->orderBy('created_at','DESC')->get();
-        return $quoots;
+        return QuootResource::collection($quoots);
     }
 
-    public function getUserQuoots(int $userId):Collection{
+    public function getUserQuoots(int $userId):AnonymousResourceCollection{
         $quoots=Quoot::with('quser.image')->where('user_id',$userId)->orderBy('created_at','DESC')->get();
-        return $quoots;
+        return QuootResource::collection($quoots);
     }
 }

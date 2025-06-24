@@ -21,8 +21,8 @@ class MakeChatRoomController extends Controller
     )
     {
         $user1=Auth::id();
-        $user2=$quserService->getUserByUserName($userName)->id;
+        $user2=$quserService->getUserByUserName($userName)->resource->id;
         $chatRoomId=$chatService->createChatRoom($user1,$user2);
-        return redirect()->route('chat.index',['chatId'=>$chatRoomId]);
+        return response()->json(['chatId'=>$chatRoomId],200);
     }
 }

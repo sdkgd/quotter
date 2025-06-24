@@ -21,8 +21,8 @@ class UnFollowUserController extends Controller
     )
     {
         $following=Auth::id();
-        $follower=$quserService->getUserByUserName($userName)->id;
+        $follower=$quserService->getUserByUserName($userName)->resource->id;
         $followsService->deleteFollow($following,$follower);
-        return redirect()->route('user.index',['userName'=>$userName]);
+        return response()->noContent();
     }
 }

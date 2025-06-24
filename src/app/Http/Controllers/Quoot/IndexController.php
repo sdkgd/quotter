@@ -19,19 +19,19 @@ class IndexController extends Controller
         QuserService $quserService,
     )
     {
-        $loginId=Auth::id();
-        if($loginId){
+        if($request->id){
+            $loginId=$request->id;
             $quoots=$quootService->getFollowsQuoots($loginId);
-            $loginUserName=$quserService->getUserById($loginId)->user_name;
-            return view('quoot.index')->with([
+            $loginUserName=$quserService->getUserById($loginId)->resource->user_name;
+            return response()->json([
                 'userName'=>$loginUserName,
                 'quoots'=>$quoots,
-            ]);
+            ],200);
         }else{
             $quoots=$quootService->getAllQuoots();
-            return view('quoot.index')->with([
+            return response()->json([
                 'quoots'=>$quoots,
-            ]);
+            ],200);
         }
     }
 }

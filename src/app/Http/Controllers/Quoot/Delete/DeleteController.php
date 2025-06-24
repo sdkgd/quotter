@@ -18,9 +18,9 @@ class DeleteController extends Controller
     )
     {
         $quootId=(int)$request->route('quootId');
-        $quoot=$quootService->getQuootById($quootId);
+        $quoot=$quootService->getQuootById($quootId)->resource;
         if(Auth::user()->cannot('delete',$quoot)) abort(403);
         $quootService->deleteQuoot($quootId);
-        return redirect()->route('quoot.index');
+        return response()->noContent();
     }
 }

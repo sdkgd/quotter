@@ -24,14 +24,14 @@ class ChatController extends Controller
     {
         $chat=$chatService->getChatById($chatId);
         if(Auth::user()->cannot('enter',$chat)) abort(403);
-        $user1=$quserService->getUserById($chat->user1_id);
-        $user2=$quserService->getUserById($chat->user2_id);
+        $user1=$quserService->getUserById($chat->user1_id)->resource;
+        $user2=$quserService->getUserById($chat->user2_id)->resource;
         $users=array($user1->display_name,$user2->display_name);
         $messages=$messageService->getMessagesByChatId($chatId);
-        return view('chat.index')->with([
+        return response()->json([
             'chatId'=>$chatId,
             'users'=>$users,
             'messages'=>$messages,
-        ]);
+        ],200);
     }
 }
