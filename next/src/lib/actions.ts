@@ -364,11 +364,13 @@ export const editProfile = async (data:FormData, userName:string) =>{
   try{
     const input1:string = String(data.get("input1"));
     const input2:string = String(data.get("input2"));
+    const input3:any|null = data.get("input3");
 
     const form = new FormData();
     form.append('_method', 'PUT');
     form.append('input1',input1);
     form.append('input2',input2);
+    if(input3.size!==0) form.append('input3',input3);
 
     const cookieStore = await cookies();
     const token:string|undefined = cookieStore.get("token")?.value;

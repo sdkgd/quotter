@@ -1,9 +1,13 @@
+import ButtonPost from "@/components/element/buttonpost";
+import LinkGet from "@/components/element/linkget";
+import QuootList from "@/components/quoot/quootlist";
+import { createFollow, deleteFollow, getUserData, getUserPage, moveChatRoom } from "@/lib/actions";
+import { redirect } from "next/navigation";
 import React from "react";
 import Link from "next/link";
-import { createFollow, deleteFollow, deleteQuoot, getUserData, getUserPage, moveChatRoom } from "@/lib/actions";
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { quoot } from "@/types/types";
+import ImageFrame from "@/components/element/imageframe";
+import { LOCAL_DEFAULT_IMAGE_URL, S3_DEFAULT_IMAGE_URL } from "@/constants";
 
 type Props={
   params:Promise<{userName:string}>;
@@ -13,12 +17,12 @@ let data;
 export default async function Page({params}:Props) {
   let loginUserId:number=0;
   try{
-    const res = await getUserData();
-    loginUserId = res?.id;
+    const res2 = await getUserData();
+    loginUserId = res2?.id;
   }catch(e){
     console.log((e as Error).message);
   }
-
+  
   try{
     const res = await getUserPage((await params).userName,loginUserId);
     data = res;
@@ -68,36 +72,36 @@ export default async function Page({params}:Props) {
 
   return(
     <>
-      <p>ユーザ{data.displayName}のページ</p>
-      <p>{data.profile}</p>
-      {(loginUserId && loginUserId!==data.id && !data.isFollowing)?<form action={tryCreateFollow}><button type="submit">フォローする</button></form>:''}
-      {(loginUserId && loginUserId!==data.id && data.isFollowing)?<form action={tryDeleteFollow}><button type="submit">フォロー解除</button></form>:''}
-      {(loginUserId && loginUserId!==data.id)?<form action={tryMoveChatRoom}><button type="submit">チャットを開始</button></form>:''}
-      {(loginUserId && loginUserId===data.id)?<Link href={`/user/${data.userName}/edit`}>プロフィール編集画面へ</Link>:''}
-      <div>
-        {data.quoots?.map((quoot:quoot)=>(
-          <React.Fragment key={quoot.id}>
-            {quoot.content} by {quoot.quser?.display_name} posted on {quoot.created_at}
-            {(loginUserId && loginUserId===quoot.quser?.id)?<Link href={`/quoot/update/${quoot.id}`}> 更新</Link>:''}
-            {(loginUserId && loginUserId===quoot.quser?.id)?
-              <form action={
-                async()=>{
-                  "use server";
-                  try{
-                    await deleteQuoot(quoot.id);
-                  }catch(e){
-                    console.log((e as Error).message);
-                  }
-                  redirect("/quoot"); 
-                }
-              }>
-                <button type="submit"> 削除</button>
-              </form>:''
-            }
-            <br></br>
-          </React.Fragment>
-        ))}
+      <div className="h-8"></div>
+      <div className="flex justify-between">
+        <div className="flex">
+          {data.imagePath? 
+            <ImageFrame path={data.imagePath} size={120} /> :
+            process.env.NODE_ENV==="production"?
+            <ImageFrame path={S3_DEFAULT_IMAGE_URL} size={120} />:
+            <ImageFrame path={LOCAL_DEFAULT_IMAGE_URL} size={120} />
+          }
+          <div className="ml-8">
+            <h2 id="displayname" className="text-3xl font-bold mb-4">{data.displayName}</h2>
+            <p id="profile">{data.profile}</p>
+          </div>
+        </div>
+        <div>
+          <ul className="flex space-x-4">
+            <li><Link href={`/user/${data.userName}/follows`} className="text-center text-gray-500 hover:text-black">Follows</Link></li>
+            <li><Link href={`/user/${data.userName}/followers`} className="text-center text-gray-500 hover:text-black">Followers</Link></li>
+          </ul>
+        </div>
       </div>
+
+      <div className="flex flex-wrap justify-center">
+        {(loginUserId && loginUserId!==data.id && !data.isFollowing)?<form action={tryCreateFollow}><ButtonPost id="create-follow" description="フォローする"/></form>:''}
+        {(loginUserId && loginUserId!==data.id && data.isFollowing)?<form action={tryDeleteFollow}><ButtonPost id="delete-follow" description="フォロー解除"/></form>:''}
+        {(loginUserId && loginUserId!==data.id)?<form action={tryMoveChatRoom}><ButtonPost id="start-chat" description="チャットを開始"/></form>:''}
+        {(loginUserId && loginUserId===data.id)?<LinkGet id="move-edit-profile-page" path={`/user/${data.userName}/edit`} description="プロフィール編集画面へ" />:''}
+      </div>
+
+      <QuootList loginUserId={loginUserId} quoots={data.quoots} />
     </>
   )
 }

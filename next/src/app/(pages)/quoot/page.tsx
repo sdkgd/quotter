@@ -1,12 +1,10 @@
 import React from "react";
-import { deleteQuoot, getQuoot, getUserData } from "@/lib/actions";
-import Link from "next/link";
-import { redirect } from "next/navigation";
-import { quoot } from "@/types/types";
+import { getQuoot, getUserData } from "@/lib/actions";
+import QuootList from "@/components/quoot/quootlist";
 
 export default async function Page() {
   let quoots;
-  let userId:null|number = null;
+  let userId;
   try{
     const res = await getUserData();
     userId = res.id;
@@ -24,28 +22,7 @@ export default async function Page() {
   return(
     <>
       <div>
-        {quoots?.map((quoot:quoot)=>(
-          <React.Fragment key={quoot.id}>
-            {quoot.content} by {quoot.quser?.display_name} posted on {quoot.created_at}
-            {(userId && userId===quoot.quser?.id)?<Link href={`/quoot/update/${quoot.id}`}> 更新</Link>:''}
-            {(userId && userId===quoot.quser?.id)?
-              <form action={
-                async()=>{
-                  "use server";
-                  try{
-                    await deleteQuoot(quoot.id);
-                  }catch(e){
-                    console.log((e as Error).message);
-                  }
-                  redirect("/quoot"); 
-                }
-              }>
-              <button type="submit"> 削除</button>
-              </form>:''
-            }
-            <br></br>
-          </React.Fragment>
-        ))}
+        <QuootList loginUserId={userId} quoots={quoots} />
       </div>
     </>
   )

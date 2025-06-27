@@ -1,8 +1,7 @@
-import React from "react";
-import Link from "next/link";
-import { getFollows } from "@/lib/actions";
+import UserList from "@/components/user/userlist";
+import { getFollows } from "@/lib/actions"
 import { redirect } from "next/navigation";
-import { quser } from "@/types/types";
+import React from "react";
 
 type Props={
   params:Promise<{userName:string}>;
@@ -20,12 +19,10 @@ export default async function Page({params}:Props) {
 
   return(
     <>
-      <p>{data.displayName}さんがフォロー中</p>
-      {data.users?.map((user:quser)=>(
-        <React.Fragment key={user.id}>
-          <p><Link href={`/user/${user.user_name}`}>{user.display_name}</Link></p>
-        </React.Fragment>
-      ))}
+      <div className="flex justify-center">
+        <h2 className="text-lg font-bold mb-4">{data.displayName} さんがフォロー中</h2>
+      </div>
+      <UserList users={data.users} />
     </>
   )
 }
