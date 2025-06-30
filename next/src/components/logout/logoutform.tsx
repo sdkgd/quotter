@@ -1,4 +1,5 @@
 import { logout } from "@/lib/actions";
+import { errorRedirect } from "@/lib/navigations";
 import { redirect } from "next/navigation";
 
 export default function LogoutForm(){
@@ -7,7 +8,8 @@ export default function LogoutForm(){
     try{
       await logout();
     }catch(e){
-      console.log((e as Error).message);
+      await errorRedirect((e as Error & { statusCode?: number }).statusCode);
+      throw new Error("予期せぬエラーが発生しました");
     }
     redirect("/login");
   }

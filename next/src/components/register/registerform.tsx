@@ -20,7 +20,12 @@ export default function RegisterForm(){
     if(pas1===pas2){
       try{
         await register(data);
-        router.push("/quoot");   
+        const res = await register(data);
+        if(res){
+          setError(res);
+        }else{
+          router.push("/quoot");
+        }
       }catch(e){
         setError((e as Error).message);
       }

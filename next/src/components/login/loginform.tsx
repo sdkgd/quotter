@@ -11,8 +11,12 @@ export default function LoginForm(){
 
   const tryLogin = async (data:FormData) =>{
     try{
-      await login(data);
-      router.push("/quoot");      
+      const res = await login(data);
+      if(res){
+        setError(res);
+      }else{
+        router.push("/quoot");   
+      }      
     }catch(e){
       setError((e as Error).message);
     }

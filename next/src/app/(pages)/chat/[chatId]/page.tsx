@@ -1,7 +1,7 @@
 import Auth from "@/components/auth";
 import MessagePostForm from "@/components/chat/messagepostform";
 import { getMessages, getUserData } from "@/lib/actions";
-import { redirect } from "next/navigation";
+import { errorRedirect } from "@/lib/navigations";
 import React from "react";
 
 type Props={
@@ -14,15 +14,18 @@ export default async function Page({params}:Props) {
     const res = await getUserData();
     userId = res.id;
   }catch(e){
-    console.log((e as Error).message);
-    redirect("/error/401");
+    await errorRedirect((e as Error & { statusCode?: number }).statusCode);
+    throw new Error("予期せぬエラーが発生しました");
   }
 
   try{
-    await getMessages((await params).chatId);
+    const res = await getMessages((await params).chatId);
+    if(!res.messages){
+      throw Object.assign(new Error(res),{statusCode:404});
+    }
   }catch(e){
-    console.log((e as Error).message);
-    redirect("/error/403");
+    await errorRedirect((e as Error & { statusCode?: number }).statusCode);
+    throw new Error("予期せぬエラーが発生しました");
   }
 
   return(

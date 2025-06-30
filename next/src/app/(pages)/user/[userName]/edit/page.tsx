@@ -1,7 +1,7 @@
 import Auth from "@/components/auth";
 import EditForm from "@/components/user/editform";
 import { canEditProfile } from "@/lib/actions";
-import { redirect } from "next/navigation";
+import { errorRedirect } from "@/lib/navigations";
 
 type Props={
   params:Promise<{userName:string}>;
@@ -13,8 +13,8 @@ export default async function Page({params}:Props) {
     const res = await canEditProfile((await params).userName);
     data = res;
   }catch(e){
-    console.log((e as Error).message);
-    redirect("/error/403");
+    await errorRedirect((e as Error & { statusCode?: number }).statusCode);
+    throw new Error("予期せぬエラーが発生しました");
   }
 
   return(

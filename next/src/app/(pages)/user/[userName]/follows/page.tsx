@@ -1,6 +1,6 @@
 import UserList from "@/components/user/userlist";
 import { getFollows } from "@/lib/actions"
-import { redirect } from "next/navigation";
+import { errorRedirect } from "@/lib/navigations";
 import React from "react";
 
 type Props={
@@ -13,8 +13,8 @@ export default async function Page({params}:Props) {
     const res = await getFollows((await params).userName);
     data = res;
   }catch(e){
-    console.log((e as Error).message);
-    redirect("/login");
+    await errorRedirect((e as Error & { statusCode?: number }).statusCode);
+    throw new Error("予期せぬエラーが発生しました");
   }
 
   return(

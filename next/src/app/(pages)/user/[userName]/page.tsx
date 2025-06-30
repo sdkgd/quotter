@@ -8,6 +8,7 @@ import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import ImageFrame from "@/components/element/imageframe";
 import { LOCAL_DEFAULT_IMAGE_URL, S3_DEFAULT_IMAGE_URL } from "@/constants";
+import { errorRedirect } from "@/lib/navigations";
 
 type Props={
   params:Promise<{userName:string}>;
@@ -27,8 +28,8 @@ export default async function Page({params}:Props) {
     const res = await getUserPage((await params).userName,loginUserId);
     data = res;
   }catch(e){
-    console.log((e as Error).message);
-    redirect("/error/403");
+    await errorRedirect((e as Error & { statusCode?: number }).statusCode);
+    throw new Error("予期せぬエラーが発生しました");
   }
 
   const tryCreateFollow = async() =>{
@@ -38,8 +39,8 @@ export default async function Page({params}:Props) {
       const res = await getUserPage((await params).userName,loginUserId);
       data = res;
     }catch(e){
-      console.log((e as Error).message);
-      redirect("/error/403");
+      await errorRedirect((e as Error & { statusCode?: number }).statusCode);
+      throw new Error("予期せぬエラーが発生しました");
     }
     revalidatePath(`/user/${(await params).userName}`);
   }
@@ -51,8 +52,8 @@ export default async function Page({params}:Props) {
       const res = await getUserPage((await params).userName,loginUserId);
       data = res;
     }catch(e){
-      console.log((e as Error).message);
-      redirect("/error/403");
+      await errorRedirect((e as Error & { statusCode?: number }).statusCode);
+      throw new Error("予期せぬエラーが発生しました");
     }
     revalidatePath(`/user/${(await params).userName}`);
   }
@@ -64,8 +65,8 @@ export default async function Page({params}:Props) {
       const res = await moveChatRoom((await params).userName);
       chatId = res.chatId;
     }catch(e){
-      console.log((e as Error).message);
-      redirect("/error/403");
+      await errorRedirect((e as Error & { statusCode?: number }).statusCode);
+      throw new Error("予期せぬエラーが発生しました");
     }
     redirect(`/chat/${chatId}`);
   }

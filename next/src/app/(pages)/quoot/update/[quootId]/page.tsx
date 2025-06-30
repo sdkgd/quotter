@@ -1,7 +1,7 @@
 import Auth from "@/components/auth";
 import UpdateForm from "@/components/quoot/updateform";
 import { canUpdateQuoot } from "@/lib/actions";
-import { redirect } from "next/navigation";
+import { errorRedirect } from "@/lib/navigations";
 
 type Props={
   params:Promise<{quootId:number}>;
@@ -13,8 +13,8 @@ export default async function Page({params}:Props){
     const res = await canUpdateQuoot((await params).quootId);
     data = res;
   }catch(e){
-    console.log((e as Error).message);
-    redirect("/error/403");
+    await errorRedirect((e as Error & { statusCode?: number }).statusCode);
+    throw new Error("予期せぬエラーが発生しました");
   }
 
   return(
