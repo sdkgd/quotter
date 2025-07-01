@@ -21,7 +21,7 @@ export default async function Page({params}:Props) {
   try{
     const res = await getMessages((await params).chatId);
     if(!res.messages){
-      throw Object.assign(new Error(res),{statusCode:404});
+      throw Object.assign(new Error(res),{statusCode:res.status});
     }
   }catch(e){
     await errorRedirect((e as Error & { statusCode?: number }).statusCode);
