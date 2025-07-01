@@ -20,63 +20,46 @@ beforeEach(function(){
     }    
 });
 
-test('非ログイン時、ユーザページの「フォローする」「フォロー解除」ボタンが表示されない', function(){
-    $response = $this->get('/user/'.$this->users[1]->user_name);
-    $response->assertDontSee('フォローする');
-    $response->assertDontSee('フォロー解除');
-});
-
 test('非ログイン時、フォローアクションしようとするとログイン画面にリダイレクト', function(){
-    $response = $this->post('/user/'.$this->users[1]->user_name.'/follow');
-    $response->assertRedirect('/login');
+    $response = $this->post('/api/user/'.$this->users[1]->user_name.'/follow');
+    $response->assertStatus(401);
 });
 
 test('非ログイン時、フォロー解除アクションしようとするとログイン画面にリダイレクト', function(){
-    $response = $this->delete('/user/'.$this->users[1]->user_name.'/unfollow');
-    $response->assertRedirect('/login');
+    $response = $this->delete('/api/user/'.$this->users[1]->user_name.'/unfollow');
+    $response->assertStatus(401);
 });
 
-test('ログイン時、「フォローする」ボタン押下でリダイレクトされ、「フォロー解除」ボタンが表示される', function(){
-    $this->post('/login', [
-        'email' => $this->users[0]->email,
-        'password' => 'password',
+test('ログイン時、「フォローする」ボタン押下でレスポンスが返る', function(){
+    $token = $this->users[0]->createToken('AccessToken')->plainTextToken;
+    $response = $this->post('/api/user/'.$this->users[1]->user_name.'/follow',[],[
+        'Authorization' => 'Bearer '.$token,
     ]);
-    $response = $this->get('/user/'.$this->users[1]->user_name);
-    $response->assertSee('フォローする');
-    $response = $this->post('/user/'.$this->users[1]->user_name.'/follow');
-    $response->assertRedirect('/user/'.$this->users[1]->user_name);
-    $response = $this->get('/user/'.$this->users[1]->user_name);
-    $response->assertSee('フォロー解除');
+    $response->assertStatus(201);
 });
 
 test('ログイン時、「フォローする」ボタン押下でDBにフォロー関係が構築される', function(){
-    $this->post('/login', [
-        'email' => $this->users[0]->email,
-        'password' => 'password',
+    $token = $this->users[0]->createToken('AccessToken')->plainTextToken;
+    $this->post('/api/user/'.$this->users[1]->user_name.'/follow',[],[
+        'Authorization' => 'Bearer '.$token,
     ]);
-    $this->post('/user/'.$this->users[1]->user_name.'/follow');
     $this->assertDatabaseHas('follows',[
         'following_user_id'=>1,
         'followed_user_id'=>2,
     ]);
 });
 
-test('ログイン時、「フォロー解除」ボタン押下でリダイレクトされ、「フォローする」ボタンが表示される', function(){
+test('ログイン時、「フォロー解除」ボタン押下でレスポンスが返る', function(){
     $follow=Follows::factory()->create([
         'id'=>1,
         'following_user_id'=>1,
         'followed_user_id'=>2,
     ]);
-    $this->post('/login', [
-        'email' => $this->users[0]->email,
-        'password' => 'password',
+    $token = $this->users[0]->createToken('AccessToken')->plainTextToken;
+    $response = $this->delete('/api/user/'.$this->users[1]->user_name.'/unfollow',[],[
+        'Authorization' => 'Bearer '.$token,
     ]);
-    $response = $this->get('/user/'.$this->users[1]->user_name);
-    $response->assertSee('フォロー解除');
-    $response = $this->delete('/user/'.$this->users[1]->user_name.'/unfollow');
-    $response->assertRedirect('/user/'.$this->users[1]->user_name);
-    $response = $this->get('/user/'.$this->users[1]->user_name);
-    $response->assertSee('フォローする');
+    $response->assertStatus(204);
 });
 
 test('ログイン時、「フォロー解除」ボタン押下でDBのフォロー関係が削除される', function(){
@@ -89,11 +72,10 @@ test('ログイン時、「フォロー解除」ボタン押下でDBのフォロ
         'following_user_id'=>1,
         'followed_user_id'=>2,
     ]);
-    $this->post('/login', [
-        'email' => $this->users[0]->email,
-        'password' => 'password',
+    $token = $this->users[0]->createToken('AccessToken')->plainTextToken;
+    $this->delete('/api/user/'.$this->users[1]->user_name.'/unfollow',[],[
+        'Authorization' => 'Bearer '.$token,
     ]);
-    $this->delete('/user/'.$this->users[1]->user_name.'/unfollow');
     $this->assertDatabaseMissing('follows',[
         'following_user_id'=>1,
         'followed_user_id'=>2,

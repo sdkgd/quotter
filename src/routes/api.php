@@ -3,11 +3,93 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Models\Quser;
+use App\Models\Quoot;
+use App\Models\Follows;
+use Illuminate\Support\Facades\Storage;
+use App\Models\Chat;
 
 Route::get('/test', function (Request $request) {
    return response()->json([
        'message' => "This is a test message from API.",
     ],200);
+});
+
+Route::post('/test/reset-db', function () {
+    if (env('APP_ENV') === 'production') {
+      return response()->json(['error' => 'Forbidden'], 403);
+    }
+    Artisan::call('migrate:fresh --seed');
+    return response()->json(['message' => 'Database reset'], 200);
+});
+
+Route::post('/test/create-testuser', function () {
+   if (env('APP_ENV') === 'production') {
+      return response()->json(['error' => 'Forbidden'], 403);
+   }
+   $user = Quser::factory()->create([
+      'profile'=>'Test User',
+   ]);
+   return response()->json([
+      'id' => $user->id,
+      'user_name' => $user->user_name,
+      'display_name' => $user->display_name,
+      'email' => $user->email,
+      'profile' => $user->profile,
+   ],201);
+});
+
+Route::post('/test/create-testquoot', function (Request $request) {
+   if (env('APP_ENV') === 'production') {
+      return response()->json(['error' => 'Forbidden'], 403);
+   }
+   $quoot = Quoot::factory()->create([
+      'user_id'=>$request->user_id,
+      'content'=>$request->quoot,
+   ]);
+   return response()->json([
+      'id' => $quoot->id,
+   ],201);
+});
+
+Route::post('/test/create-testfollow', function (Request $request) {
+   if (env('APP_ENV') === 'production') {
+      return response()->json(['error' => 'Forbidden'], 403);
+   }
+   $follow = Follows::factory()->create([
+      'following_user_id'=>$request->following_id,
+      'followed_user_id'=>$request->followed_id,
+   ]);
+   return response()->json([
+      'id' => $follow->id,
+   ],201);
+});
+
+Route::post('/test/clear-image-disk', function (Request $request) {
+   if (env('APP_ENV') === 'production') {
+      return response()->json(['error' => 'Forbidden'], 403);
+   }
+   $quser=Quser::where(['user_name'=>$request->user_name,])->first();
+   if(env('APP_ENV') === 'ci'){
+      $path=$quser->getImagePath();
+      $div=preg_split("/\//",$path);
+      Storage::disk('s3')->delete(end($div));
+   }else{
+      Storage::disk('public')->delete($quser->getImagePath());
+   }
+});
+
+Route::post('/test/create-testchat', function (Request $request) {
+   if (env('APP_ENV') === 'production') {
+      return response()->json(['error' => 'Forbidden'], 403);
+   }
+   $chat=Chat::factory()->create([
+      'user1_id'=>$request->user1_id,
+      'user2_id'=>$request->user2_id,
+   ]);
+   return response()->json([
+      'id' => $chat->id,
+   ],201);
 });
 
 Route::post('/login', [AuthController::class, 'login'])->name('login');

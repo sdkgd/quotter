@@ -18,80 +18,48 @@ beforeEach(function(){
     ]);
 });
 
-test('非ログイン時、Quoot更新画面に移動するとログイン画面にリダイレクト', function(){
-    $response = $this->get('/quoot/update/1');
-    $response->assertRedirect('/login');
-});
-
 test('非ログイン時、Quoot更新しようとするとログイン画面にリダイレクト', function(){
-    $response = $this->put('/quoot/update/1',[
+    $response = $this->put('/api/quoot/update/1',[
         'quoot'=>'Edited Test Quoot',
     ]);
-    
-    $response->assertRedirect('/login');
-});
-
-test('別ユーザでは、Quoot更新画面に移動できない', function(){
-    $this->post('/login', [
-        'email' => $this->user2->email,
-        'password' => 'password',
-    ]);
-    $response = $this->get('/quoot/update/1');
-    $response->assertStatus(403);
+    $response->assertStatus(401);
 });
 
 test('別ユーザでは、Quoot更新できない', function(){
-    $this->post('/login', [
-        'email' => $this->user2->email,
-        'password' => 'password',
-    ]);
-    $response = $this->put('/quoot/update/1',[
+    $token = $this->user2->createToken('AccessToken')->plainTextToken;
+    $response = $this->put('/api/quoot/update/1',[
         'quoot'=>'Edited Test Quoot',
+    ],[
+        'Authorization' => 'Bearer '.$token,
     ]);
     $response->assertStatus(403);
 });
 
-test('ログイン後、Quoot更新画面に移動できる', function(){
-    $this->post('/login', [
-        'email' => $this->user->email,
-        'password' => 'password',
-    ]);
-    $response = $this->get('/quoot/update/1');
-    $response->assertStatus(200);
-});
-
 test('ログイン後、Quoot更新しレスポンスが返る', function(){
-    $this->post('/login', [
-        'email' => $this->user->email,
-        'password' => 'password',
-    ]);
-    $response = $this->put('/quoot/update/1',[
+    $token = $this->user->createToken('AccessToken')->plainTextToken;
+    $response = $this->put('/api/quoot/update/1',[
         'quoot'=>'Edited Test Quoot',
+    ],[
+        'Authorization' => 'Bearer '.$token,
     ]);
-    
-    $response->assertRedirect('/quoot');
-    $response = $this->get('/quoot');
-    $response->assertSee('Edited Test Quoot');
+    $response->assertStatus(204);
 });
 
 test('ログイン後、Quoot更新しDBが更新される', function(){
-    $this->post('/login', [
-        'email' => $this->user->email,
-        'password' => 'password',
-    ]);
-    $this->put('/quoot/update/1',[
+    $token = $this->user->createToken('AccessToken')->plainTextToken;
+    $this->put('/api/quoot/update/1',[
         'quoot'=>'Edited Test Quoot',
+    ],[
+        'Authorization' => 'Bearer '.$token,
     ]);
-
     $this->assertDatabaseHas('quoots',['content'=>'Edited Test Quoot']);
 });
 
 test('ログイン後、バリデーションを満たさない内容では更新できない', function(){
-    $this->post('/login', [
-        'email' => $this->user->email,
-        'password' => 'password',
-    ]);
-    $response = $this->put('/quoot/update/1',[
+    $token = $this->user->createToken('AccessToken')->plainTextToken;
+    $response = $this->put('/api/quoot/update/1',[
         'quoot'=>'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,',
-    ])->assertInvalid(['quoot'=>'つぶやき は 140 文字以下で入力してください',]);
+    ],[
+        'Authorization' => 'Bearer '.$token,
+    ])->assertStatus(422)->assertJson(['message'=>'つぶやき は 140 文字以下で入力してください',]);
 });

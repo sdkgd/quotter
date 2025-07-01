@@ -19,35 +19,30 @@ beforeEach(function(){
 });
 
 test('非ログイン時、Quoot削除しようとするとログイン画面にリダイレクト', function(){
-    $response = $this->delete('/quoot/delete/1');
-    $response->assertRedirect('/login');
+    $response = $this->delete('/api/quoot/delete/1');
+    $response->assertStatus(401);
 });
 
 test('別ユーザでは、Quoot削除できない', function(){
-    $this->post('/login', [
-        'email' => $this->user2->email,
-        'password' => 'password',
+    $token = $this->user2->createToken('AccessToken')->plainTextToken;
+    $response = $this->delete('/api/quoot/delete/1',[],[
+        'Authorization' => 'Bearer '.$token,
     ]);
-    $response = $this->delete('/quoot/delete/1');
     $response->assertStatus(403);
 });
 
 test('ログイン後、Quoot削除しレスポンスが返る', function(){
-    $this->post('/login', [
-        'email' => $this->user->email,
-        'password' => 'password',
+    $token = $this->user->createToken('AccessToken')->plainTextToken;
+    $response = $this->delete('/api/quoot/delete/1',[],[
+        'Authorization' => 'Bearer '.$token,
     ]);
-    $response = $this->delete('/quoot/delete/1');
-    $response->assertRedirect('/quoot');
-    $response = $this->get('/quoot');
-    $response->assertDontSee('Test Quoot');
+    $response->assertStatus(204);
 });
 
 test('ログイン後、Quoot削除しDBが更新される', function(){
-    $this->post('/login', [
-        'email' => $this->user->email,
-        'password' => 'password',
+    $token = $this->user->createToken('AccessToken')->plainTextToken;
+    $this->delete('/api/quoot/delete/1',[],[
+        'Authorization' => 'Bearer '.$token,
     ]);
-    $this->delete('/quoot/delete/1');
     $this->assertDatabaseMissing('quoots',['content'=>'Test Quoot']);
 });

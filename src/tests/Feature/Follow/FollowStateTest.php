@@ -52,29 +52,26 @@ beforeEach(function(){
 });
 
 test('非ログイン時、全ユーザのQuootが表示される', function(){
-    $response = $this->get('/quoot');
+    $response = $this->get('/api/quoot');
     for($i=0;$i<5;$i++){
         $response->assertSee('I am '.$this->users[$i]->user_name);
     }
 });
 
 test('非ログイン時、フォローリストを表示しようとするとログイン画面にリダイレクト', function(){
-    $response = $this->get('/user/'.$this->users[2]->user_name.'/follows');
-    $response->assertRedirect('/login');
+    $response = $this->get('/api/user/'.$this->users[2]->user_name.'/follows');
+    $response->assertStatus(401);
 });
 
 test('非ログイン時、フォロワーリストを表示しようとするとログイン画面にリダイレクト', function(){
-    $response = $this->get('/user/'.$this->users[2]->user_name.'/followers');
-    $response->assertRedirect('/login');
+    $response = $this->get('/api/user/'.$this->users[2]->user_name.'/followers');
+    $response->assertStatus(401);
 });
 
 test('ログイン時、自分及びフォロー中のユーザのQuootのみが表示される', function(){
-    $response=$this->post('/login', [
-        'email' => $this->users[2]->email,
-        'password' => 'password',
-    ]);
-    
-    $response = $this->get('/quoot');
+    // /api/quoot へのgetリクエストはtokenを付与しないため、token作成は省略
+    $response = $this->get('/api/quoot/?id='.$this->users[2]->id);
+
     for($i=0;$i<2;$i++){
         $response->assertDontSee('I am '.$this->users[$i]->user_name);
     }
@@ -84,11 +81,10 @@ test('ログイン時、自分及びフォロー中のユーザのQuootのみが
 });
 
 test('ログイン時、フォローリストにフォロー中のユーザが表示される', function(){
-    $this->post('/login', [
-        'email' => $this->users[2]->email,
-        'password' => 'password',
+    $token = $this->users[2]->createToken('AccessToken')->plainTextToken;
+    $response = $this->get('/api/user/'.$this->users[2]->user_name.'/follows',[
+        'Authorization' => 'Bearer '.$token,
     ]);
-    $response = $this->get('/user/'.$this->users[2]->user_name.'/follows');
     for($i=0;$i<2;$i++){
         $response->assertDontSee($this->users[$i]->user_name);
     }
@@ -98,11 +94,10 @@ test('ログイン時、フォローリストにフォロー中のユーザが�
 });
 
 test('ログイン時、フォロワーリストに自分をフォローしているユーザが表示される', function(){
-    $this->post('/login', [
-        'email' => $this->users[2]->email,
-        'password' => 'password',
+    $token = $this->users[2]->createToken('AccessToken')->plainTextToken;
+    $response = $this->get('/api/user/'.$this->users[2]->user_name.'/followers',[
+        'Authorization' => 'Bearer '.$token,
     ]);
-    $response = $this->get('/user/'.$this->users[2]->user_name.'/followers');
     for($i=3;$i<5;$i++){
         $response->assertDontSee($this->users[$i]->user_name);
     }

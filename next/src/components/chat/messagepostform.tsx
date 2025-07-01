@@ -22,7 +22,7 @@ export default function MessagePostForm({userId,chatId}:Props){
         if(res.messages){
           setData(res);
         }else{
-          setError(res);
+          setError(res.message);
         }
       }catch(e){
         console.log((e as Error).message);
@@ -48,7 +48,7 @@ export default function MessagePostForm({userId,chatId}:Props){
     if(res2.messages){
       setData(res2);
     }else{
-      setError(res2);
+      setError(res2.message);
     }
   }
 

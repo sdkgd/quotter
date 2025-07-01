@@ -317,7 +317,13 @@ export const getMessages = async (chatId:number) =>{
     return res.data;
   }catch(e){
     if(axios.isAxiosError(e)){
-      return "メッセージ取得に失敗しました";
+      const status = e.response?.data.status;
+      if(status===401 || status===403 || status==404){
+        return{
+          status: status,
+          message: "メッセージ取得に失敗しました",
+        }
+      }
     }
     throw new Error("予期せぬエラーが発生しました");
   }
