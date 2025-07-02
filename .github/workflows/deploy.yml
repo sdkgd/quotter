@@ -67,7 +67,7 @@ jobs:
 
       - name: Download env ci file
         run: |
-          aws s3 cp s3://cognitobirm-quotter-env-file/.env.ci ./src/.env
+          aws s3 cp s3://cognitobirm-quotter-env-file/php/.env.ci ./src/.env
           aws s3 cp s3://cognitobirm-quotter-env-file/next/.env.ci ./next/.env.local
           aws s3 cp s3://cognitobirm-quotter-env-file/e2e/.env.ci ./e2e/.env
 
