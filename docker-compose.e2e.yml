@@ -1,0 +1,14 @@
+services:
+  e2e:
+    hostname: e2e.local
+    build: 
+      dockerfile: ./infra/e2e/prod/Dockerfile
+      context: .
+    volumes:
+      - ./e2e:/e2e
+    networks:
+      - quotter
+
+networks:
+  quotter:
+    driver: bridge

@@ -1,5 +1,16 @@
 services:
+  next:
+    hostname: next.local
+    build:
+      dockerfile: ./infra/next/prod/Dockerfile
+      context: .
+    volumes:
+      - ./next:/next
+    networks:
+      - quotter
+
   php:
+    hostname: php.local
     build: 
       dockerfile: ./infra/php/prod/Dockerfile
       context: .
@@ -9,11 +20,13 @@ services:
       - quotter
 
   web:
+    hostname: web.local
     build: 
       dockerfile: ./infra/web/prod/Dockerfile
       context: .
     ports:
-      - 8080:80
+      - 80:3030
+      - 8080:9090
     volumes:
       - ./src/public:/var/www/html/public
       - ./src/storage:/var/www/html/public/storage
@@ -22,6 +35,7 @@ services:
       - quotter
     depends_on:
       - php
+      - next
 
   db:
     image: 'mysql/mysql-server:8.0'
@@ -34,6 +48,11 @@ services:
       - data:/var/lib/mysql
     ports:
       - 3306:3306
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - quotter
 
