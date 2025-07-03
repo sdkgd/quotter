@@ -185,76 +185,107 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # - name: Download TaskDefinition for migration
-      #   env:
-      #     AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-      #   run: |
-      #     aws s3 cp s3://cognitobirm-quotter-task-definition-file/task_definition_migration.json .
-      #     sed -i "s/AWS_ACCOUNT_ID/$AWS_ACCOUNT_ID/g" task_definition_migration.json
+      - name: Download TaskDefinition for migration
+        env:
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+        run: |
+          aws s3 cp s3://cognitobirm-quotter-task-definition-file/task_definition_migration.json .
+          sed -i "s/AWS_ACCOUNT_ID/$AWS_ACCOUNT_ID/g" task_definition_migration.json
 
-      # - name: Fill in the new image ID for migration
-      #   id: migration-task-def
-      #   uses: aws-actions/amazon-ecs-render-task-definition@v1
-      #   with:
-      #     task-definition: task_definition_migration.json
-      #     container-name: migration
-      #     image: ${{ steps.meta-php.outputs.tags }}
+      - name: Fill in the new image ID for migration
+        id: migration-task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task_definition_migration.json
+          container-name: migration
+          image: ${{ steps.meta-php.outputs.tags }}
 
-      # - name: Create Task Definition
-      #   id: create-task-def
-      #   uses: aws-actions/amazon-ecs-deploy-task-definition@v2
-      #   with:
-      #     task-definition: ${{ steps.migration-task-def.outputs.task-definition }}
-      #     wait-for-service-stability: true
+      - name: Create Task Definition
+        id: create-task-def
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.migration-task-def.outputs.task-definition }}
+          wait-for-service-stability: true
 
-      # - name: Run migration
-      #   env:
-      #     ECS_SUBNET_ID: ${{ secrets.PROD_ECS_SUBNET_ID }}
-      #     ECS_SECURITY_GROUP: ${{ secrets.PROD_ECS_SECURITY_GROUP }}
-      #   run: |
-      #     run_task_response=$(aws ecs run-task \
-      #         --cluster ${{ env.APP_NAME }}-app-cluster \
-      #         --task-definition ${{ steps.create-task-def.outputs.task-definition-arn }} \
-      #         --launch-type FARGATE \
-      #         --override "containerOverrides=[{name="migration",command=[php,artisan,migrate,--force]}]" \
-      #         --network-configuration "awsvpcConfiguration={subnets=[$ECS_SUBNET_ID],securityGroups=[$ECS_SECURITY_GROUP],assignPublicIp=DISABLED}"
-      #     )
-      #     TASK_ARN=$(echo $run_task_response | jq -r '.tasks[0].taskArn')
-      #     aws ecs wait tasks-stopped --cluster ${{ env.APP_NAME }}-app-cluster --tasks $TASK_ARN
+      - name: Run migration
+        env:
+          ECS_SUBNET_ID: ${{ secrets.PROD_ECS_SUBNET_ID }}
+          ECS_SECURITY_GROUP: ${{ secrets.PROD_ECS_SECURITY_GROUP }}
+        run: |
+          run_task_response=$(aws ecs run-task \
+              --cluster ${{ env.APP_NAME }}-app-cluster \
+              --task-definition ${{ steps.create-task-def.outputs.task-definition-arn }} \
+              --launch-type FARGATE \
+              --override "containerOverrides=[{name="migration",command=[php,artisan,migrate,--force]}]" \
+              --network-configuration "awsvpcConfiguration={subnets=[$ECS_SUBNET_ID],securityGroups=[$ECS_SECURITY_GROUP],assignPublicIp=DISABLED}"
+          )
+          TASK_ARN=$(echo $run_task_response | jq -r '.tasks[0].taskArn')
+          aws ecs wait tasks-stopped --cluster ${{ env.APP_NAME }}-app-cluster --tasks $TASK_ARN
 
-      # - name: Download TaskDefinition
-      #   env:
-      #     AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-      #   run: |
-      #     aws s3 cp s3://cognitobirm-quotter-task-definition-file/task_definition.json .
-      #     sed -i "s/AWS_ACCOUNT_ID/$AWS_ACCOUNT_ID/g" task_definition.json
+      - name: Download TaskDefinition
+        env:
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+        run: |
+          aws s3 cp s3://cognitobirm-quotter-task-definition-file/task_definition_web.json .
+          aws s3 cp s3://cognitobirm-quotter-task-definition-file/task_definition_php.json .
+          aws s3 cp s3://cognitobirm-quotter-task-definition-file/task_definition_next.json .
+          sed -i "s/AWS_ACCOUNT_ID/$AWS_ACCOUNT_ID/g" task_definition_web.json
+          sed -i "s/AWS_ACCOUNT_ID/$AWS_ACCOUNT_ID/g" task_definition_php.json
+          sed -i "s/AWS_ACCOUNT_ID/$AWS_ACCOUNT_ID/g" task_definition_next.json
 
-      # - name: Fill in the new web container image ID
-      #   id: web-task-def
-      #   uses: aws-actions/amazon-ecs-render-task-definition@v1
-      #   env:
-      #     ECR_REGISTRY: ${{ steps.amazon-ecr-login.outputs.registry }}
-      #     ECR_REPOSITORY: ${{ env.APP_NAME }}-web
-      #   with:
-      #     task-definition: task_definition.json
-      #     container-name: web
-      #     image: ${{ steps.meta-web.outputs.tags }}
+      - name: Fill in the new web container image ID
+        id: web-task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        env:
+          ECR_REGISTRY: ${{ steps.amazon-ecr-login.outputs.registry }}
+          ECR_REPOSITORY: ${{ env.APP_NAME }}-web
+        with:
+          task-definition: task_definition_web.json
+          container-name: web
+          image: ${{ steps.meta-web.outputs.tags }}
 
-      # - name: Fill in the new php container image ID
-      #   id: php-task-def
-      #   uses: aws-actions/amazon-ecs-render-task-definition@v1
-      #   env:
-      #     ECR_REGISTRY: ${{ steps.amazon-ecr-login.outputs.registry }}
-      #     ECR_REPOSITORY: ${{ env.APP_NAME }}-php
-      #   with:
-      #     task-definition: ${{ steps.web-task-def.outputs.task-definition }}
-      #     container-name: php
-      #     image: ${{ steps.meta-php.outputs.tags }}
+      - name: Fill in the new php container image ID
+        id: php-task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        env:
+          ECR_REGISTRY: ${{ steps.amazon-ecr-login.outputs.registry }}
+          ECR_REPOSITORY: ${{ env.APP_NAME }}-php
+        with:
+          task-definition: task_definition_php.json
+          container-name: php
+          image: ${{ steps.meta-php.outputs.tags }}
 
-      # - name: Deploy container to Amazon ECS
-      #   uses: aws-actions/amazon-ecs-deploy-task-definition@v2
-      #   with:
-      #     task-definition: ${{ steps.php-task-def.outputs.task-definition }}
-      #     service: ${{ env.APP_NAME }}
-      #     cluster: ${{ env.APP_NAME }}-app-cluster
-      #     wait-for-service-stability: true
+      - name: Fill in the new next container image ID
+        id: next-task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        env:
+          ECR_REGISTRY: ${{ steps.amazon-ecr-login.outputs.registry }}
+          ECR_REPOSITORY: ${{ env.APP_NAME }}-next
+        with:
+          task-definition: task_definition_next.json
+          container-name: next
+          image: ${{ steps.meta-next.outputs.tags }}
+
+      - name: Deploy php container to Amazon ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.php-task-def.outputs.task-definition }}
+          service: ${{ env.APP_NAME }}-php
+          cluster: ${{ env.APP_NAME }}-app-cluster
+          wait-for-service-stability: true
+
+      - name: Deploy next container to Amazon ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.next-task-def.outputs.task-definition }}
+          service: ${{ env.APP_NAME }}-next
+          cluster: ${{ env.APP_NAME }}-app-cluster
+          wait-for-service-stability: true
+
+      - name: Deploy web container to Amazon ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.web-task-def.outputs.task-definition }}
+          service: ${{ env.APP_NAME }}-web
+          cluster: ${{ env.APP_NAME }}-app-cluster
+          wait-for-service-stability: true
